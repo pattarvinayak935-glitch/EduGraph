@@ -165,7 +165,11 @@ export default function App() {
           <OutputDashboard 
             lessonPlan={lessonPlan} 
             onBack={() => setPage('form')} 
-            onGenerateAgain={() => handleGenerateLesson(formData)} 
+            onGenerateAgain={() => handleGenerateLesson(formData)}
+            onLoadSaved={(savedData) => {
+              setLessonPlan(savedData);
+              setPage('output');
+            }}
           />
         )}
 

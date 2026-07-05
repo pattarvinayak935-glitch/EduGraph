@@ -311,12 +311,38 @@ export default function TeacherForm({ onSubmit, onBack }) {
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-education-100 focus:border-education-500 transition-all bg-white"
               >
-                <option value="English">English</option>
-                <option value="Kannada">Kannada</option>
-                <option value="English + simple Kannada">English + simple Kannada (Bilingual)</option>
-                <option value="Hindi">Hindi</option>
-                <option value="Marathi">Marathi</option>
-                <option value="Telugu">Telugu</option>
+                <optgroup label="── South India ──">
+                  <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Telugu">Telugu (తెలుగు)</option>
+                  <option value="Tamil">Tamil (தமிழ்)</option>
+                  <option value="Malayalam">Malayalam (മലയാളം)</option>
+                </optgroup>
+                <optgroup label="── North India ──">
+                  <option value="Hindi">Hindi (हिन्दी)</option>
+                  <option value="Marathi">Marathi (मराठी)</option>
+                  <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                  <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
+                  <option value="Rajasthani">Rajasthani (राजस्थानी)</option>
+                  <option value="Bhojpuri">Bhojpuri (भोजपुरी)</option>
+                </optgroup>
+                <optgroup label="── East India ──">
+                  <option value="Bengali">Bengali (বাংলা)</option>
+                  <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+                  <option value="Assamese">Assamese (অসমীয়া)</option>
+                </optgroup>
+                <optgroup label="── Other ──">
+                  <option value="Urdu">Urdu (اردو)</option>
+                  <option value="Sanskrit">Sanskrit (संस्कृतम्)</option>
+                  <option value="English">English</option>
+                </optgroup>
+                <optgroup label="── Bilingual Combinations ──">
+                  <option value="English + simple Kannada">English + Kannada (Bilingual)</option>
+                  <option value="English + simple Hindi">English + Hindi (Bilingual)</option>
+                  <option value="English + simple Telugu">English + Telugu (Bilingual)</option>
+                  <option value="English + simple Tamil">English + Tamil (Bilingual)</option>
+                  <option value="English + simple Bengali">English + Bengali (Bilingual)</option>
+                  <option value="English + simple Marathi">English + Marathi (Bilingual)</option>
+                </optgroup>
               </select>
             </div>
 

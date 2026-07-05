@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Copy, 
   Printer, 
@@ -17,13 +17,21 @@ import {
   HeartHandshake,
   Lightbulb,
   MessageCircle,
-  AlertCircle
+  AlertCircle,
+  Save,
+  History,
+  FileDown
 } from 'lucide-react';
+import SavedPlansPanel from './SavedPlansPanel';
 
-export default function OutputDashboard({ lessonPlan, onBack, onGenerateAgain }) {
+export default function OutputDashboard({ lessonPlan, onBack, onGenerateAgain, onLoadSaved }) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [showQuizAnswers, setShowQuizAnswers] = useState({});
+  const [saved, setSaved] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const dashboardRef = useRef(null);
 
   // 13 components map to category tags
   const tabs = [
@@ -53,6 +61,60 @@ export default function OutputDashboard({ lessonPlan, onBack, onGenerateAgain })
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Save lesson plan to localStorage
+  const handleSavePlan = () => {
+    const existing = JSON.parse(localStorage.getItem('edugraph_saved_plans') || '[]');
+    const topic = lessonPlan.lessonPlan?.topic || lessonPlan.learningObjectives?.[0] || 'Lesson Plan';
+    const newPlan = {
+      id: Date.now().toString(),
+      title: topic,
+      subtitle: `${lessonPlan.studentProfileSummary?.slice(0, 60) || 'Custom lesson'}...`,
+      savedAt: new Date().toISOString(),
+      data: lessonPlan
+    };
+    const updated = [newPlan, ...existing].slice(0, 20); // keep last 20
+    localStorage.setItem('edugraph_saved_plans', JSON.stringify(updated));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  // Export full dashboard as PDF using html2canvas + jsPDF
+  const handleExportPDF = async () => {
+    setExportingPDF(true);
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+      const element = dashboardRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 1.5,
+        useCORS: true,
+        backgroundColor: '#f8fafc',
+        ignoreElements: (el) => el.classList.contains('no-print')
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      let yOffset = 0;
+      let remaining = imgH;
+      while (remaining > 0) {
+        pdf.addImage(imgData, 'PNG', 0, -yOffset, imgW, imgH);
+        remaining -= pageH;
+        if (remaining > 0) {
+          pdf.addPage();
+          yOffset += pageH;
+        }
+      }
+      pdf.save('EduGraph-LessonPlan.pdf');
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      alert('PDF export failed. Try using the Print button instead.');
+    }
+    setExportingPDF(false);
   };
 
   // Helper function to decide visibility based on selected tab
@@ -129,6 +191,35 @@ export default function OutputDashboard({ lessonPlan, onBack, onGenerateAgain })
           </button>
 
           <button
+            onClick={handleSavePlan}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+              saved
+                ? 'bg-emerald-600 text-white shadow-emerald-100'
+                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <Save size={16} />
+            {saved ? 'Plan Saved!' : 'Save Plan'}
+          </button>
+
+          <button
+            onClick={() => setShowSavedPanel(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-all"
+          >
+            <History size={16} />
+            Saved Plans
+          </button>
+
+          <button
+            onClick={handleExportPDF}
+            disabled={exportingPDF}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold text-sm rounded-xl transition-all disabled:opacity-60"
+          >
+            <FileDown size={16} />
+            {exportingPDF ? 'Generating PDF...' : 'Export PDF'}
+          </button>
+
+          <button
             onClick={handlePrint}
             className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-education-600 to-orange-500 hover:scale-[1.01] text-white font-semibold text-sm rounded-xl shadow-md shadow-orange-100 transition-all"
           >
@@ -161,8 +252,19 @@ export default function OutputDashboard({ lessonPlan, onBack, onGenerateAgain })
         <p className="text-sm text-slate-500 mt-1">Generated by Adaptive Curriculum Agent for Rural Schools</p>
       </div>
 
+      {/* Saved Plans Slide-in Panel */}
+      {showSavedPanel && (
+        <SavedPlansPanel
+          onClose={() => setShowSavedPanel(false)}
+          onLoad={(data) => {
+            setShowSavedPanel(false);
+            onLoadSaved && onLoadSaved(data);
+          }}
+        />
+      )}
+
       {/* Main cards grid */}
-      <div className="print-container grid grid-cols-1 gap-8">
+      <div ref={dashboardRef} className="print-container grid grid-cols-1 gap-8">
         
         {/* 1. Learning Objectives */}
         {isVisible('learningObjectives') && (
