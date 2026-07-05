@@ -1,0 +1,13 @@
+{
+  "name": "edugraph-root",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=client",
+    "server": "npm start --workspace=server"
+  }
+}
